@@ -55,8 +55,8 @@ def get_lines(matrix, loc):
 
      hor = matrix[:,j]
      ver = matrix[i,:]
-     diag_right = np.concatenate([flat[tl:pos:h+1],flat[pos+1:br+1:h+1]])
-     diag_left = np.concatenate([flat[tr:pos:h-1],flat[pos+1:bl+1:h-1]])
+     diag_right = np.concatenate([flat[tl:pos:h+1],flat[pos:br+1:h+1]])
+     diag_left = np.concatenate([flat[tr:pos:h-1],flat[pos:bl+1:h-1]])
 
      return hor, ver, diag_right, diag_left
 

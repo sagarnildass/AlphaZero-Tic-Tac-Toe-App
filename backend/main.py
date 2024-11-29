@@ -28,6 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+AI_PLAYER = -1
+
 # Initialize the game settings
 game_setting = {'size': (6,6), 'N':4}
 
@@ -126,11 +128,11 @@ def ai_probability():
         }
 
     # Process the current game state with the AI policy
-    frame = torch.tensor(game.state * game.player, dtype=torch.float, device="cpu").unsqueeze(0).unsqueeze(0)
+    frame = torch.tensor(game.state * AI_PLAYER, dtype=torch.float, device="cpu").unsqueeze(0).unsqueeze(0)
     _, value = challenge_policy(frame)
 
     # Transform value into a probability of AI winning
-    probability_of_winning = 1 - ((value.item() + 1) / 2)  # Convert from [-1, 1] range to [0, 1]
+    probability_of_winning = ((value.item() + 1) / 2)  # Convert from [-1, 1] range to [0, 1]
 
     return {
         "status": "In progress",
@@ -162,13 +164,15 @@ def get_mcts_tree(max_depth: int = 3):
         return {"tree": None}
     
 @app.get("/get_mcts_subtree")
-def get_mcts_subtree(node_id: int):
+def get_mcts_subtree(node_id: int, max_depth: int = 2):
     global last_mytree
     if last_mytree is None:
         print("No MCTS tree available")  # Debug log
         return {"tree": None}
     try:
-        subtree = extract_node_by_id(last_mytree, node_id)
+        # Get best_path_ids from the root
+        best_path_ids = get_best_path_ids(last_mytree)
+        subtree = extract_node_by_id(last_mytree, node_id, max_depth=max_depth, best_path_ids=best_path_ids)
         if subtree is None:
             return {"tree": None, "error": "Node not found"}
         return {"tree": subtree}
@@ -183,24 +187,28 @@ def get_mcts_summary():
         return {"summary": None}
     return {"summary": summarize_mcts_tree(last_mytree)}
     
-def extract_node_by_id(node, target_id):
+def extract_node_by_id(node, target_id, max_depth=2, current_depth=0, best_path_ids=None):
     if id(node) == target_id:
-        return extract_mcts_tree_data(node)
+        return extract_mcts_tree_data(node, max_depth=max_depth, current_depth=current_depth, best_path_ids=best_path_ids)
     for child in node.child.values():
-        result = extract_node_by_id(child, target_id)
+        result = extract_node_by_id(child, target_id, max_depth, current_depth, best_path_ids)
         if result:
             return result
     return None
 
 
 # Function to extract MCTS tree data
-def extract_mcts_tree_data(node, max_depth=2, current_depth=0):
+def extract_mcts_tree_data(node, max_depth=2, current_depth=0, best_path_ids=None):
     def sanitize_float(value):
         if isinstance(value, (float, int)) and (math.isinf(value) or math.isnan(value)):
             return 0.0
         elif isinstance(value, torch.Tensor):
             return value.item() if value.numel() == 1 else value.tolist()
         return value
+
+    if current_depth == 0:
+        # Compute the most promising path IDs at the root call
+        best_path_ids = get_best_path_ids(node)
 
     if current_depth >= max_depth:
         return {"id": id(node), "children": None}  # Stop at max depth
@@ -212,6 +220,7 @@ def extract_mcts_tree_data(node, max_depth=2, current_depth=0):
             'V': sanitize_float(node.V),
             'U': sanitize_float(node.U),
             'prob': sanitize_float(node.prob),
+            'is_best_path': id(node) in best_path_ids,
             'children': []
         }
         if depth < max_depth:
@@ -222,6 +231,20 @@ def extract_mcts_tree_data(node, max_depth=2, current_depth=0):
         return node_dict
 
     return node_to_dict(node, current_depth)
+
+def get_best_path_ids(node):
+    # Recursively find the path with the highest cumulative N
+    path_ids = []
+
+    def recurse(node):
+        path_ids.append(id(node))
+        if node.child:
+            # Select child with the highest N
+            best_child = max(node.child.values(), key=lambda c: c.N)
+            recurse(best_child)
+
+    recurse(node)
+    return set(path_ids)
 
 def summarize_mcts_tree(node):
     def aggregate(node):

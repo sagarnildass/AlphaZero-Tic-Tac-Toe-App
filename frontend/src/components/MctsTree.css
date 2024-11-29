@@ -1,0 +1,57 @@
+.zoom-controls .btn {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 2px;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.zoom-controls .btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* Legend */
+.legend svg {
+  border: 1px solid #ccc;
+}
+
+/* Transitions for Nodes */
+.node-enter {
+  opacity: 0.01;
+  transform: scale(0.5);
+}
+.node-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms ease-in, transform 300ms ease-in;
+}
+.node-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+.node-exit-active {
+  opacity: 0.01;
+  transform: scale(0.5);
+  transition: opacity 300ms ease-in, transform 300ms ease-in;
+}
+
+/* Transitions for Links */
+.link-enter {
+  opacity: 0.01;
+  stroke-dasharray: 5, 5;
+  stroke-dashoffset: 100;
+}
+.link-enter-active {
+  opacity: 1;
+  stroke-dashoffset: 0;
+  transition: opacity 300ms ease-in, stroke-dashoffset 300ms ease-in;
+}
+.link-exit {
+  opacity: 1;
+}
+.link-exit-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
+}

@@ -23,6 +23,8 @@ function App() {
   const [treeDepth, setTreeDepth] = useState(3);
   const [mctsSummary, setMctsSummary] = useState(null);
   const [aiProbability, setAiProbability] = useState(null);
+  const [maxN, setMaxN] = useState(1);
+  const [maxV, setMaxV] = useState(1);
 
   const API_BASE_URL = "http://localhost:8000";
 
@@ -46,8 +48,9 @@ function App() {
   };
 
   const onCellClick = async (row, col) => {
+    
     if (winner !== null || board[row][col] !== 0) return;
-
+    
     try {
       // Player makes a move
       const response = await axios.post(`${API_BASE_URL}/make_move`, {
@@ -56,12 +59,10 @@ function App() {
       });
       setBoard(response.data.board);
       setPlayer(response.data.player);
-
+      // console.log('Backend Response:', response.data);
       if (response.data.winner !== null) {
         setWinner(response.data.winner);
-        setMessage(
-          `Player ${response.data.winner === 1 ? "X" : "O"} wins!`
-        );
+        setMessage(`Player ${response.data.winner === 1 ? "X" : "O"} wins!`);
         setMctsTreeData(null); // Reset MCTS data
         setMctsSummary(null);
         setAiProbability(null); // Reset AI probability
@@ -90,9 +91,7 @@ function App() {
 
       if (response.data.winner !== null) {
         setWinner(response.data.winner);
-        setMessage(
-          `Player ${response.data.winner === 1 ? "X" : "O"} wins!`
-        );
+        setMessage(`Player ${response.data.winner === 1 ? "X" : "O"} wins!`);
         setMctsTreeData(null); // Reset MCTS data
         setMctsSummary(null);
         setAiProbability(null); // Reset AI probability
@@ -125,11 +124,31 @@ function App() {
         params: { max_depth: treeDepth },
       });
       const mctsData = response.data.tree;
-      const transformedData = transformMctsData(mctsData);
+
+      // Update maxN and maxV for normalization
+      const { maxN, maxV } = getMaxNandV(mctsData);
+      setMaxN(maxN);
+      setMaxV(maxV);
+
+      const transformedData = transformMctsData(mctsData, maxN, maxV);
       setMctsTreeData(transformedData);
     } catch (error) {
       console.error("Error fetching MCTS tree data:", error);
     }
+  };
+
+  const getMaxNandV = (node, currentMaxN = 0, currentMaxV = 0) => {
+    if (!node) return { maxN: currentMaxN, maxV: currentMaxV };
+    currentMaxN = Math.max(currentMaxN, node.N);
+    currentMaxV = Math.max(currentMaxV, Math.abs(node.V));
+    if (node.children) {
+      node.children.forEach((child) => {
+        const { maxN: childMaxN, maxV: childMaxV } = getMaxNandV(child, currentMaxN, currentMaxV);
+        currentMaxN = childMaxN;
+        currentMaxV = childMaxV;
+      });
+    }
+    return { maxN: currentMaxN, maxV: currentMaxV };
   };
 
   const fetchMctsSummary = async () => {
@@ -141,153 +160,175 @@ function App() {
     }
   };
 
-  const transformMctsData = (node) => {
+  const transformMctsData = (node, maxN, maxV) => {
     if (!node) return null;
-
+  
     const nodeName = `N: ${node.N}, V: ${node.V.toFixed(2)}`;
     const children = node.children
-      ? node.children.map((child) => transformMctsData(child))
+      ? node.children.map((child) => transformMctsData(child, maxN, maxV))
       : [];
-
-    const action = node.action
-      ? `Action: [${node.action.join(", ")}]`
-      : "Root";
-
+  
+    const action = node.action ? `Action: [${node.action.join(", ")}]` : "Root";
+  
     return {
       name: `${action}\n${nodeName}`,
       id: node.id,
+      N: node.N,
+      V: node.V,
+      prob: node.prob,
+      isBestPath: node.is_best_path,
       children: children,
+      maxN: maxN, // Pass maxN and maxV for normalization
+      maxV: maxV,
     };
   };
 
   return (
-    <div className="App min-h-screen bg-gray-100 flex flex-col items-center py-10">
-      <h1 className="text-4xl font-bold mb-4">ConnectN Game</h1>
-      <p className="text-lg mb-4">{message}</p>
-      <GameBoard board={board} onCellClick={onCellClick} />
-      {loading && (
-        <div className="flex justify-center items-center mt-4">
-          <ClipLoader color="#4A90E2" loading={loading} size={50} />
-        </div>
-      )}
-      {winner !== null && (
-        <div className="mt-6 flex flex-col items-center">
-          <h2 className="text-2xl font-semibold mb-4">
-            {winner === 0
-              ? "It's a draw!"
-              : `Player ${winner === 1 ? "X" : "O"} wins!`}
-          </h2>
-          <button
-            onClick={startGame}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
-          >
-            Start New Game
-          </button>
-        </div>
-      )}
-      {aiProbability !== null && (
-        <div className="w-full max-w-md mt-6 flex flex-col items-center">
-          <h3 className="text-lg font-semibold mb-2">
-            AI's Probability of Winning
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <RadialBarChart
-              innerRadius="70%"
-              outerRadius="100%"
-              data={[
-                {
-                  name: "AI",
-                  value: aiProbability * 100,
-                  fill: "#ff4d4f",
-                },
-                {
-                  name: "You",
-                  value: (1 - aiProbability) * 100,
-                  fill: "#52c41a",
-                },
-              ]}
-              startAngle={90}
-              endAngle={-270}
-            >
-              <RadialBar
-                minAngle={15}
-                background
-                clockWise
-                dataKey="value"
-                cornerRadius={10}
-              />
-              <Tooltip />
-              <Legend
-                iconSize={10}
-                layout="horizontal"
-                verticalAlign="bottom"
-                align="center"
-              />
-              <text
-                x="50%"
-                y="50%"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                className="text-xl font-bold"
-              >
-                {`${(aiProbability * 100).toFixed(1)}%`}
-              </text>
-            </RadialBarChart>
-          </ResponsiveContainer>
-          <div className="flex justify-between w-full px-4 mt-2">
-            <p className="text-green-600 font-semibold">
-              You: {(1 - aiProbability) * 100 < 1 ? "<1" : ((1 - aiProbability) * 100).toFixed(1)}%
-            </p>
-            <p className="text-red-600 font-semibold">
-              AI: {aiProbability * 100 < 1 ? "<1" : (aiProbability * 100).toFixed(1)}%
-            </p>
-          </div>
-        </div>
-      )}
-      {mctsTreeData && (
-        <div className="mt-6 w-full overflow-auto">
-          <h2 className="text-xl font-semibold mb-4 text-center">
-            AI's MCTS Tree
-          </h2>
-          <div className="flex flex-col items-center">
-            <div className="mt-4 flex items-center">
-              <label htmlFor="depth" className="mr-2">
-                Tree Depth:
-              </label>
-              <input
-                type="number"
-                id="depth"
-                value={treeDepth}
-                min={1}
-                max={5}
-                onChange={(e) => setTreeDepth(parseInt(e.target.value))}
-                className="border p-1 w-16 text-center"
-              />
+    <div className="App min-h-screen bg-gray-100 py-10">
+      {/* Header */}
+      <div className="text-center mb-4">
+        <h1 className="text-4xl font-bold">ConnectN Game</h1>
+        <p className="text-lg">{message}</p>
+      </div>
+
+      {/* Main Content Container */}
+      <div className="flex">
+        {/* Left Side: Game Board */}
+        <div className="w-1/3 flex flex-col items-center pl-4">
+          <GameBoard board={board} onCellClick={onCellClick} />
+          {loading && (
+            <div className="flex justify-center items-center mt-4">
+              <ClipLoader color="#4A90E2" loading={loading} size={50} />
+            </div>
+          )}
+          {/* Winner Message and New Game Button */}
+          {winner !== null && (
+            <div className="mt-6 flex flex-col items-center">
+              <h2 className="text-2xl font-semibold mb-4">
+                {winner === 0
+                  ? "It's a draw!"
+                  : `Player ${winner === 1 ? "X" : "O"} wins!`}
+              </h2>
               <button
-                onClick={fetchMctsTree}
-                className="ml-4 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition duration-200"
+                onClick={startGame}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
               >
-                Update Tree
+                Start New Game
               </button>
             </div>
-            <MctsTree data={mctsTreeData} />
-            {mctsSummary && (
-              <div className="mt-4 text-center">
-                <h3 className="text-lg font-semibold mb-2">
-                  MCTS Summary
-                </h3>
-                <p>Total Nodes: {mctsSummary.total_nodes}</p>
-                <p>
-                  Average N: {mctsSummary.average_N.toFixed(2)}
+          )}
+          {/* AI Probability Chart */}
+          {aiProbability !== null && (
+            <div className="w-full max-w-md mt-6 flex flex-col items-center">
+              <h3 className="text-lg font-semibold mb-2">
+                AI's Probability of Winning
+              </h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <RadialBarChart
+                  innerRadius="70%"
+                  outerRadius="100%"
+                  data={[
+                    {
+                      name: "AI",
+                      value: aiProbability * 100,
+                      fill: "#ff4d4f",
+                    },
+                    {
+                      name: "You",
+                      value: (1 - aiProbability) * 100,
+                      fill: "#52c41a",
+                    },
+                  ]}
+                  startAngle={90}
+                  endAngle={-270}
+                >
+                  <RadialBar
+                    minAngle={15}
+                    background
+                    clockWise
+                    dataKey="value"
+                    cornerRadius={10}
+                  />
+                  <Tooltip />
+                  <Legend
+                    iconSize={10}
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="text-xl font-bold"
+                  >
+                    {`${(aiProbability * 100).toFixed(1)}%`}
+                  </text>
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="flex justify-between w-full px-4 mt-2">
+                <p className="text-green-600 font-semibold">
+                  You:{" "}
+                  {(1 - aiProbability) * 100 < 1
+                    ? "<1"
+                    : ((1 - aiProbability) * 100).toFixed(1)}
+                  %
                 </p>
-                <p>
-                  Average V: {mctsSummary.average_V.toFixed(2)}
+                <p className="text-red-600 font-semibold">
+                  AI:{" "}
+                  {aiProbability * 100 < 1
+                    ? "<1"
+                    : (aiProbability * 100).toFixed(1)}
+                  %
                 </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right Side: MCTS Tree */}
+        <div className="w-2/3 pr-4">
+          {mctsTreeData && (
+            <div className="overflow-auto h-full">
+              <h2 className="text-xl font-semibold mb-4 text-center">
+                AI's MCTS Tree
+              </h2>
+              <div className="flex flex-col items-center">
+                <div className="mt-4 flex items-center">
+                  <label htmlFor="depth" className="mr-2">
+                    Tree Depth:
+                  </label>
+                  <input
+                    type="number"
+                    id="depth"
+                    value={treeDepth}
+                    min={1}
+                    max={5}
+                    onChange={(e) => setTreeDepth(parseInt(e.target.value))}
+                    className="border p-1 w-16 text-center"
+                  />
+                  <button
+                    onClick={fetchMctsTree}
+                    className="ml-4 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition duration-200"
+                  >
+                    Update Tree
+                  </button>
+                </div>
+                <MctsTree data={mctsTreeData} maxN={maxN} maxV={maxV} />
+                {mctsSummary && (
+                  <div className="mt-4 text-center">
+                    <h3 className="text-lg font-semibold mb-2">MCTS Summary</h3>
+                    <p>Total Nodes: {mctsSummary.total_nodes}</p>
+                    <p>Average N: {mctsSummary.average_N.toFixed(2)}</p>
+                    <p>Average V: {mctsSummary.average_V.toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
