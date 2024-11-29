@@ -1,3 +1,5 @@
+# src/main.py
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from ConnectN import ConnectN
@@ -13,7 +15,6 @@ from policy import Policy
 import sys
 import math
 from fastapi.middleware.cors import CORSMiddleware
-
 
 sys.modules['__main__'] = sys.modules[__name__]
 
@@ -39,21 +40,29 @@ policy = Policy(game)
 # Load the saved model (adjust the path if necessary)
 challenge_policy = torch.load('6-6-4-pie.policy')
 
-# policy.eval()
-
-# Define a Pydantic model for the move
+# Define Pydantic models
 class Move(BaseModel):
     row: int
     col: int
+
+class StartGameRequest(BaseModel):
+    player: int  # 1 for first (Player X), -1 for second (Player O)
 
 # Initialize the game
 game = ConnectN(**game_setting)
 
 # Endpoint to start a new game
 @app.post("/start_game")
-def start_game():
+def start_game(request: StartGameRequest):
     global game
+    player = request.player
+    if player not in [1, -1]:
+        raise HTTPException(status_code=400, detail="Invalid player selection")
+    
+    # Initialize the game
     game = ConnectN(**game_setting)
+    game.player = player  # Set the current player based on choice
+    
     return {
         "status": "Game started",
         "board": game.state.tolist(),
@@ -186,16 +195,15 @@ def get_mcts_summary():
     if last_mytree is None:
         return {"summary": None}
     return {"summary": summarize_mcts_tree(last_mytree)}
-    
+        
 def extract_node_by_id(node, target_id, max_depth=2, current_depth=0, best_path_ids=None):
     if id(node) == target_id:
         return extract_mcts_tree_data(node, max_depth=max_depth, current_depth=current_depth, best_path_ids=best_path_ids)
     for child in node.child.values():
-        result = extract_node_by_id(child, target_id, max_depth, current_depth, best_path_ids)
+        result = extract_node_by_id(child, target_id, max_depth=max_depth, current_depth=current_depth, best_path_ids=best_path_ids)
         if result:
             return result
     return None
-
 
 # Function to extract MCTS tree data
 def extract_mcts_tree_data(node, max_depth=2, current_depth=0, best_path_ids=None):
