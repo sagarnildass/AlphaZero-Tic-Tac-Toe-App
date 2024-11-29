@@ -64,23 +64,28 @@ def get_lines(matrix, loc):
 class ConnectN:
 
      def __init__(self, size, N, pie_rule=False):
-          self.size = size
-          self.w, self.h = size
-          self.N = N
+        self.size = size
+        self.w, self.h = size
+        self.N = N
 
-          # make sure game is well defined
-          if self.w<0 or self.h<0 or self.N<2 or \
-             (self.N > self.w and self.N > self.h):
-               raise ValueError('Game cannot initialize with a {0:d}x{1:d} grid, and winning condition {2:d} in a row'.format(self.w, self.h, self.N))
+        # Ensure game is well-defined
+        if self.w < 0 or self.h < 0 or self.N < 2 or \
+           (self.N > self.w and self.N > self.h):
+            raise ValueError(
+                f'Game cannot initialize with a {self.w}x{self.h} grid, and winning condition {self.N} in a row'
+            )
 
-          
-          self.score = None
-          self.state=np.zeros(size, dtype=np.float)
-          self.player=1
-          self.last_move=None
-          self.n_moves=0
-          self.pie_rule=False
-          self.switched_side=False
+        self.score = None
+        self.state = np.zeros(size, dtype=np.float)
+        self.player = 1
+        self.last_move = None
+        self.n_moves = 0
+        self.pie_rule = pie_rule
+        self.switched_side = False
+        self.player_order = None  # Initialize player_order
+        # Initialize MCTS-related attributes
+        self.mcts_summary = None
+        self.last_mytree = None
 
      # fast deepcopy
      def __copy__(self):

@@ -80,9 +80,7 @@ function App() {
       setPlayer(response.data.player);
       if (response.data.winner !== null) {
         setWinner(response.data.winner);
-        setMessage(
-          `Player ${response.data.winner === 1 ? "X" : "O"} wins!`
-        );
+        setMessage(`Player ${response.data.winner === 1 ? "X" : "O"} wins!`);
         setMctsTreeData(null); // Reset MCTS data
         setMctsSummary(null);
         setAiProbability(null); // Reset AI probability
@@ -109,9 +107,7 @@ function App() {
       setLoading(false); // Stop loading
       if (response.data.winner !== null) {
         setWinner(response.data.winner);
-        setMessage(
-          `Player ${response.data.winner === 1 ? "X" : "O"} wins!`
-        );
+        setMessage(`Player ${response.data.winner === 1 ? "X" : "O"} wins!`);
         setMctsTreeData(null); // Reset MCTS data
         setMctsSummary(null);
         setAiProbability(null); // Reset AI probability
@@ -166,7 +162,11 @@ function App() {
     currentMaxV = Math.max(currentMaxV, Math.abs(node.V));
     if (node.children) {
       node.children.forEach((child) => {
-        const { maxN: childMaxN, maxV: childMaxV } = getMaxNandV(child, currentMaxN, currentMaxV);
+        const { maxN: childMaxN, maxV: childMaxV } = getMaxNandV(
+          child,
+          currentMaxN,
+          currentMaxV
+        );
         currentMaxN = childMaxN;
         currentMaxV = childMaxV;
       });
@@ -358,15 +358,12 @@ function App() {
                       Update Tree
                     </button>
                   </div>
-                  <MctsTree data={mctsTreeData} maxN={maxN} maxV={maxV} mctsSummary={mctsSummary} />
-                  {mctsSummary && (
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-semibold mb-2">Full Visible State Summary</h3>
-                      <p>Total Nodes: {mctsSummary.total_nodes}</p>
-                      <p>Average N: {mctsSummary.average_N.toFixed(2)}</p>
-                      <p>Average V: {mctsSummary.average_V.toFixed(2)}</p>
-                    </div>
-                  )}
+                  <MctsTree
+                    data={mctsTreeData}
+                    maxN={maxN}
+                    maxV={maxV}
+                    mctsSummary={mctsSummary}
+                  />
                 </div>
               </div>
             )}
