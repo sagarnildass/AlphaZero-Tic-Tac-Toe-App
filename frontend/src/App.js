@@ -32,10 +32,10 @@ function App() {
 
   const API_BASE_URL = "http://localhost:8000";
 
-  useEffect(() => {
-    // Remove the initial startGame call
-    // startGame();
-  }, []);
+  // useEffect(() => {
+  //   // Remove the initial startGame call
+  //   // startGame();
+  // }, []);
 
   const startGame = async (playerChoice) => {
     try {
