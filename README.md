@@ -34,7 +34,7 @@ Features
 --------
 
 -   **Interactive 6x6 Tic-Tac-Toe Board:** Engage with a responsive and clickable game board.
--   **AI Opponent:** Compete against an AI that uses Monte Carlo Tree Search (MCTS) with a trained policy model.
+-   **AI Opponent:** Compete against an AI that uses a trained Alpha Zero algorithm with Monte Carlo Tree Search (MCTS).
 -   **Player Order Selection:** Choose to play first (Player X) or second (Player O).
 -   **MCTS Tree Visualization:** Visual representation of the AI's decision-making process, including node information and probability of winning.
 -   **AI Probability Chart:** Radial bar chart displaying the AI's probability of winning based on the current game state.
@@ -97,6 +97,7 @@ AlphaZero-Tic-Tac-Toe-App/
 ```
 
 -   **backend/**: Contains all FastAPI backend code and related files.
+-   **backend/original_codes_and_notebooks**: Contains original files and training notebooks.
 -   **frontend/**: Contains all React frontend code and related files.
 -   **README.md**: Project documentation.
 -   **LICENSE**: MIT License
