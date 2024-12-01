@@ -58,6 +58,7 @@ Technologies Used
 -   **[Axios](https://axios-http.com/):** Promise-based HTTP client for making API requests.
 -   **[Recharts](https://recharts.org/):** Charting library for React.
 -   **React Spinners:** Loading spinners for React.
+-   **[VisX](https://airbnb.io/visx/):** For the Tree diagram
 -   **[Tailwind CSS](https://tailwindcss.com/):** Utility-first CSS framework.
 
 Project Structure
