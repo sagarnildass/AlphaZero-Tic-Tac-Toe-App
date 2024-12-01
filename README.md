@@ -485,4 +485,4 @@ Acknowledgments
 
 **Note:** This README assumes that the policy model (`6-6-4-pie.policy`) and other necessary backend files (`ConnectN.py`, `MCTS.py`, `policy.py`) are properly configured and located within the `backend/` directory. Ensure that all dependencies are correctly installed, and paths are appropriately set in the backend code.
 
-If you encounter any issues during setup or usage, please refer to the [Issues](https://github.com/yourusername/alphazero-tictactoe/issues) section of the GitHub repository or contact the project maintainer.
+If you encounter any issues during setup or usage, please refer to the [Issues](https://github.com/sagarnildass/AlphaZero-Tic-Tac-Toe-App/issues) section of the GitHub repository or contact the project maintainer.
