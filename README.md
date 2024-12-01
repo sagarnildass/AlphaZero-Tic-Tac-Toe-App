@@ -3,7 +3,7 @@ AlphaZero Tic-Tac-Toe with Monte Carlo Tree Search (6x6)
 
 ![The complete Tic-Tac-Toe AI created with Alpha Zero and Monte Carlo Tree Search](./frontend/public/banner.png "The complete Tic-Tac-Toe AI created with Alpha Zero and Monte Carlo Tree Search")
 
-A web-based 6x6 Tic-Tac-Toe game powered by an AI leveraging an AlphaZero algorithm with Monte Carlo Tree Search (MCTS). Users can choose to play first or second and compete against the AI in an interactive and user-friendly environment.
+A web-based 6x6 Tic-Tac-Toe game powered by an AI leveraging an AlphaZero algorithm with Monte Carlo Tree Search (MCTS). Users can choose to play first or second and compete against the AI in an interactive and user-friendly environment. In order to win, the player has to complete 4 'X's or 'O's in series instead of the traditional three in a series for a 3 x 3 game.
 
 Table of Contents
 -----------------
