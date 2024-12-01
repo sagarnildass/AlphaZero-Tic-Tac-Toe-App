@@ -195,7 +195,6 @@ cd AlphaZero-Tic-Tac-Toe-App
 
     -   Displays the AI's probability of winning based on the current game state.
     -   Updated after each AI move.
-    -   The Player can also click any node to get its information.
     -   The MCTS summary is also shown at the end of each move.
 
 ![Probability of AI winning in Alpha Zero MCTS Tic-Tac-Toe Game](./frontend/public/probability_winning.png "Probability of AI winning in Alpha Zero MCTS Tic-Tac-Toe Game")
@@ -204,6 +203,7 @@ cd AlphaZero-Tic-Tac-Toe-App
 
     -   Shows the AI's decision-making process through a visual MCTS tree.
     -   You can adjust the **Tree Depth** to view more or fewer levels of the tree.
+    -   You can also click any node to get its information.
     -   You can also click the zoom-in / zoom-out button to enlarge a specific part of the image.
 
 ![Monte Carlo Tree Search](./frontend/public/MCTS_tree_search.png "Alpha Zero With Monte Carlo Tree Search")
