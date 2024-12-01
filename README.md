@@ -113,8 +113,10 @@ Installation
 
 ### Clone the Repository
 
-`git clone https://github.com/sagarnildass/AlphaZero-Tic-Tac-Toe-App
-cd AlphaZero-Tic-Tac-Toe-App`
+```plaintext
+git clone https://github.com/sagarnildass/AlphaZero-Tic-Tac-Toe-App
+cd AlphaZero-Tic-Tac-Toe-App
+```
 
 ### Setup Backend
 
